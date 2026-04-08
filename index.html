@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editorial AI Evaluation Tool</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#f7f7f5;color:#1a1a1a;font-size:13px;line-height:1.5}
+button{cursor:pointer;font-family:inherit;font-size:13px}
+h1{font-size:16px;font-weight:600;color:#111}
+
+#header{background:#fff;border-bottom:1px solid #e5e5e3;padding:0 2rem}
+.header-top{display:flex;align-items:flex-start;justify-content:space-between;padding:1rem 0 .75rem;gap:16px;flex-wrap:wrap}
+.header-top p{font-size:12px;color:#888;margin-top:2px}
+.header-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#main{padding:1.5rem 2rem}
+
+.btn{background:#fff;border:1px solid #d8d8d5;border-radius:6px;padding:5px 12px;color:#333;transition:background .15s}
+.btn:hover{background:#f5f5f3}
+.btn-primary{background:#111;color:#fff;border-color:#111}
+.btn-primary:hover{background:#333;border-color:#333}
+.btn-danger{color:#a32d2d;border-color:#f0c0c0}
+.btn-danger:hover{background:#fcebeb}
+.btn-sm{padding:3px 9px;font-size:12px}
+
+.workflow-tabs{display:flex;gap:0;border-top:1px solid #f0f0ee;margin-top:.5rem;overflow-x:auto}
+.tab{padding:8px 16px;font-size:13px;color:#888;border:none;background:transparent;border-bottom:2px solid transparent;white-space:nowrap}
+.tab:hover{color:#333}
+.tab.active{color:#111;font-weight:500;border-bottom-color:#111}
+.tab-add{padding:8px 12px;color:#bbb;font-size:20px;line-height:1;border:none;background:transparent}
+.tab-add:hover{color:#333}
+
+.panel{background:#fff;border:1px solid #e5e5e3;border-radius:8px;padding:1.25rem;margin:1.25rem 2rem 0}
+.panel h3{font-size:14px;font-weight:600;margin-bottom:1rem}
+.panel-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px}
+.form-group label{font-size:12px;color:#666;font-weight:500}
+.form-group input,.form-group select{border:1px solid #d8d8d5;border-radius:5px;padding:6px 10px;font-size:13px;font-family:inherit;background:#fff;color:#111}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#999}
+
+.snap-item{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:.5px solid #f0f0ee}
+.snap-item:last-child{border-bottom:none}
+.snap-name{flex:1;font-weight:500;font-size:13px}
+.snap-meta{font-size:11px;color:#aaa;white-space:nowrap}
+.snap-empty{font-size:13px;color:#aaa;padding:.5rem 0}
+
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+.card{background:#fff;border-radius:8px;padding:12px 14px;border:1px solid #ebebea}
+.card-label{font-size:11px;color:#999;margin-bottom:3px;letter-spacing:.03em;text-transform:uppercase}
+.card-val{font-size:22px;font-weight:600;color:#111;line-height:1.2}
+.card-sub{font-size:11px;color:#bbb;margin-top:2px}
+.cv-green{color:#3b6d11}.cv-amber{color:#854f0b}.cv-red{color:#a32d2d}
+
+.progress-wrap{margin-bottom:1.5rem}
+.progress-label{font-size:12px;color:#888;margin-bottom:5px}
+.progress-bg{height:5px;background:#ebebea;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:#639922;border-radius:3px;transition:width .4s}
+
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:1.25rem;font-size:11px;color:#888;align-items:center}
+.legend-label{font-weight:600;color:#666;margin-right:2px}
+.litem{display:flex;align-items:center;gap:4px}
+.ldot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.lbadge{display:inline-block;font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px}
+
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:8px}
+.table-toolbar h2{font-size:14px;font-weight:600;color:#111}
+.toolbar-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+.tbl-wrap{overflow-x:auto;background:#fff;border:1px solid #e5e5e3;border-radius:8px}
+table{width:100%;border-collapse:collapse;min-width:960px}
+thead tr{border-bottom:1.5px solid #e5e5e3}
+th{font-size:11px;font-weight:600;color:#888;text-align:left;padding:8px 10px;white-space:nowrap;text-transform:uppercase;letter-spacing:.03em;background:#fafaf8}
+td{padding:7px 10px;vertical-align:top;border-bottom:1px solid #f0f0ee;color:#1a1a1a}
+tr:last-child td{border-bottom:none}
+tr.activity-row:hover td{background:#fafaf8}
+
+tr.phase-header td{background:#f5f5f3;padding:5px 10px;border-top:1px solid #e8e8e6}
+.phase-header-inner{display:flex;align-items:center;gap:6px}
+.phase-name-input{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#aaa;background:transparent;border:1px solid transparent;padding:2px 5px;border-radius:3px;font-family:inherit;min-width:50px;max-width:180px;width:auto}
+.phase-name-input:hover{border-color:#d8d8d5;background:#fff;color:#555}
+.phase-name-input:focus{outline:none;border-color:#999;background:#fff;color:#333;text-transform:none}
+.phase-pill{font-size:11px;color:#bbb;background:transparent;border:.5px solid transparent;border-radius:3px;padding:2px 6px}
+.phase-pill:hover{border-color:#d8d8d5;background:#f5f5f3;color:#555}
+.phase-pill.del:hover{border-color:#f0c0c0;background:#fcebeb;color:#e24b4a}
+
+tr.add-phase-row td{background:#f9f9f7;padding:7px 10px;border-top:1px solid #e5e5e3}
+.add-phase-form{display:flex;align-items:center;gap:6px}
+.add-phase-form input{border:1px solid #d8d8d5;border-radius:4px;padding:4px 8px;font-size:12px;font-family:inherit;width:200px}
+.add-phase-form input:focus{outline:none;border-color:#999}
+
+.edit-input{width:100%;border:1px solid transparent;border-radius:4px;padding:3px 5px;font-size:13px;font-family:inherit;background:transparent;color:#111;resize:none;min-height:28px}
+.edit-input:hover{border-color:#ddd;background:#fff}
+.edit-input:focus{border-color:#999;background:#fff;outline:none}
+select.edit-input{cursor:pointer;-webkit-appearance:auto}
+.name-input{font-weight:500;min-width:110px}
+.desc-input{font-size:12px;color:#666;min-width:130px;min-height:36px}
+.rationale-input{font-size:11px;color:#888;min-height:40px;min-width:130px}
+.notes-input{min-width:110px;font-size:12px;min-height:34px}
+
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.b-green{background:#eaf3de;color:#27500a}
+.b-amber{background:#faeeda;color:#633806}
+.b-gray{background:#f1efe8;color:#5f5e5a}
+.b-red{background:#fcebeb;color:#791f1f}
+.b-blue{background:#e6f1fb;color:#185fa5}
+.b-purple{background:#eeedfe;color:#3c3489}
+.b-teal{background:#e1f5ee;color:#085041}
+
+.delete-row{background:transparent;border:none;color:#ccc;font-size:16px;padding:2px 4px;border-radius:4px;line-height:1}
+.delete-row:hover{color:#e24b4a;background:#fcebeb}
+.add-row-btn{display:flex;align-items:center;gap:6px;background:transparent;border:none;color:#aaa;padding:10px;font-size:12px;width:100%;text-align:left}
+.add-row-btn:hover{color:#333;background:#f7f7f5}
+
+.empty-state{padding:3rem;text-align:center;color:#bbb}
+.empty-state h3{font-size:15px;font-weight:500;color:#888;margin-bottom:6px}
+
+.save-bar{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;margin-top:1rem;border-top:1px solid #ebebea;font-size:12px;color:#aaa;flex-wrap:wrap;gap:8px}
+
+@media print{
+  body{background:#fff}
+  #header{border-bottom:1px solid #ccc}
+  .header-actions,.tab-add,.workflow-tabs,.add-row-btn,.delete-row,.btn,.save-bar,.panel,.phase-pill,.add-phase-row{display:none!important}
+  #main{padding:.5rem}
+  .tbl-wrap{border:1px solid #ccc;border-radius:0}
+  .edit-input{border:none!important;background:transparent!important;padding:0}
+  table{min-width:auto}
+}
+@media(max-width:640px){
+  #header,#main{padding-left:1rem;padding-right:1rem}
+  .cards{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="header-top">
+    <div>
+      <h1>Editorial AI Evaluation Tool</h1>
+      <p>Map AI applicability across editorial workflows &mdash; based on the MIT work activity ontology</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-sm btn-primary" onclick="saveSnapshot()">Save snapshot</button>
+      <button class="btn btn-sm" id="snap-btn" onclick="toggleSnapshots()">Snapshots (<span id="snap-count">0</span>)</button>
+      <button class="btn btn-sm" onclick="exportJSON()">Export JSON</button>
+      <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import JSON</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+      <button class="btn btn-sm" onclick="window.print()">Print / PDF</button>
+    </div>
+  </div>
+  <div class="workflow-tabs" id="workflow-tabs"></div>
+</div>
+
+<div class="panel" id="snapshots-panel" style="display:none">
+  <h3>Saved snapshots</h3>
+  <div id="snapshots-list"></div>
+</div>
+
+<div class="panel" id="new-workflow-panel" style="display:none">
+  <h3>Create new workflow</h3>
+  <div class="panel-row">
+    <div class="form-group">
+      <label>Workflow name</label>
+      <input type="text" id="nw-name" placeholder="e.g. Social Media, Magazine&hellip;" />
+    </div>
+    <div class="form-group" style="flex:0 0 auto">
+      <label>Start from</label>
+      <select id="nw-template">
+        <option value="blank">Blank (default phases, no activities)</option>
+      </select>
+    </div>
+    <div class="form-group" style="flex:0 0 auto;justify-content:flex-end">
+      <label>&nbsp;</label>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-primary" onclick="createWorkflow()">Create</button>
+        <button class="btn" onclick="closeNewWorkflow()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+  <div class="cards" id="cards"></div>
+  <div class="progress-wrap">
+    <div class="progress-label" id="prog-label">AI adoption: 0 of 0 activities</div>
+    <div class="progress-bg"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div class="legend">
+    <span class="legend-label">AI applicability:</span>
+    <span class="litem"><span class="ldot" style="background:#639922"></span>Commoditized</span>
+    <span class="litem"><span class="ldot" style="background:#1d9e75"></span>Available</span>
+    <span class="litem"><span class="ldot" style="background:#ba7517"></span>Emerging</span>
+    <span class="litem"><span class="ldot" style="background:#888780"></span>None yet</span>
+    <span style="margin-left:8px" class="legend-label">Recommendation:</span>
+    <span class="litem"><span class="lbadge b-green">Adopt now</span></span>
+    <span class="litem"><span class="lbadge b-amber">Pilot carefully</span></span>
+    <span class="litem"><span class="lbadge b-blue">Monitor</span></span>
+    <span class="litem"><span class="lbadge b-gray">Keep human</span></span>
+  </div>
+  <div class="table-toolbar">
+    <h2 id="table-title">Activities</h2>
+    <div class="toolbar-actions">
+      <button class="btn btn-sm" onclick="addActivity()">+ Add activity</button>
+      <button class="btn btn-sm btn-primary" onclick="showAddPhase()">+ Add phase</button>
+    </div>
+  </div>
+  <div class="tbl-wrap" id="tbl-wrap"></div>
+  <div class="save-bar">
+    <span id="save-status">Loading&hellip;</span>
+    <button class="btn btn-sm btn-danger" onclick="deleteWorkflow()">Delete this workflow</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY='editorial-ai-v2';
+const DEFAULT_PHASES=['Planning','Writing','Editing','Design','Distribution','Analytics'];
+const APP_COLORS={
+  commoditized:{dot:'#639922',bg:'#eaf3de',text:'#27500a'},
+  available:{dot:'#1d9e75',bg:'#e1f5ee',text:'#085041'},
+  emerging:{dot:'#ba7517',bg:'#faeeda',text:'#633806'},
+  none:{dot:'#888780',bg:'#f1efe8',text:'#444441'}
+};
+const REC_CLASS={adopt:'b-green',pilot:'b-amber',monitor:'b-blue',human:'b-gray'};
+const REC_LABEL={adopt:'Adopt now',pilot:'Pilot carefully',monitor:'Monitor',human:'Keep human'};
+const MODE_CLASS={augmentation:'b-blue',automation:'b-purple',either:'b-teal',human:'b-gray'};
+const MODE_LABEL={augmentation:'Augmentation',automation:'Automation',either:'Either',human:'Human only'};
+const RISK_CLASS={low:'b-green',medium:'b-amber',high:'b-red'};
+
+const NEWSLETTER_ACTIVITIES=[
+  {phase:'Planning',activity:'Select issue topics',description:'Decide what subjects/themes the issue will cover',applicability:'emerging',mode:'augmentation',risk:'medium',rec:'pilot',rationale:'AI trend tools can surface ideas but editorial judgment drives final selection',usingAI:false,notes:''},
+  {phase:'Planning',activity:'Assign content',description:'Distribute articles and tasks to writers/contributors',applicability:'none',mode:'human',risk:'low',rec:'human',rationale:'Requires knowledge of contributor strengths, workload, and relationships',usingAI:false,notes:''},
+  {phase:'Writing',activity:'Research topic',description:'Gather facts, sources, and background for an article',applicability:'available',mode:'augmentation',risk:'high',rec:'pilot',rationale:'AI research tools exist but hallucination risk is real — verify all AI-sourced facts',usingAI:false,notes:''},
+  {phase:'Writing',activity:'Draft article body',description:'Write the main narrative or feature content',applicability:'commoditized',mode:'augmentation',risk:'medium',rec:'adopt',rationale:'Strong AI drafting tools available; human editing of voice and accuracy still essential',usingAI:false,notes:''},
+  {phase:'Writing',activity:'Write subject line',description:'Craft the email subject line',applicability:'commoditized',mode:'either',risk:'low',rec:'adopt',rationale:'Multiple A/B testing and AI copy tools available; low risk, high speed gain',usingAI:false,notes:''},
+  {phase:'Writing',activity:'Write preview text',description:'Write the snippet shown in email clients before open',applicability:'commoditized',mode:'either',risk:'low',rec:'adopt',rationale:'Same tooling as subject lines; quick win with minimal editorial consequence',usingAI:false,notes:''},
+  {phase:'Editing',activity:'Substantive edit',description:'Review structure, argument, and overall clarity of drafts',applicability:'available',mode:'augmentation',risk:'medium',rec:'pilot',rationale:'AI editing tools can flag issues but cannot replace editorial judgment on voice and mission fit',usingAI:false,notes:''},
+  {phase:'Editing',activity:'Proofread / line edit',description:'Check grammar, spelling, punctuation, and style guide compliance',applicability:'commoditized',mode:'augmentation',risk:'low',rec:'adopt',rationale:'Highest-confidence AI editorial task — accuracy is high and errors are catchable',usingAI:false,notes:''},
+  {phase:'Editing',activity:'Fact-check claims',description:'Verify factual statements, figures, and attributions',applicability:'emerging',mode:'augmentation',risk:'high',rec:'human',rationale:'AI fact-checking tools are early-stage; hallucination risk makes this human-owned until tools mature',usingAI:false,notes:''},
+  {phase:'Design',activity:'Source images',description:'Find, license, or select images for articles',applicability:'available',mode:'augmentation',risk:'medium',rec:'pilot',rationale:'AI image search and stock tools help, but rights clearance and brand fit need human review',usingAI:false,notes:''},
+  {phase:'Design',activity:'Generate images',description:'Create original images using AI image generation',applicability:'available',mode:'automation',risk:'high',rec:'pilot',rationale:'Tools are capable but brand consistency, copyright provenance, and accuracy require human oversight policy',usingAI:false,notes:''},
+  {phase:'Design',activity:'Layout / template',description:'Arrange content blocks and visual hierarchy in the email template',applicability:'emerging',mode:'augmentation',risk:'low',rec:'monitor',rationale:'AI layout suggestions exist in some platforms; not yet mature enough for hands-off use',usingAI:false,notes:''},
+  {phase:'Distribution',activity:'Segment recipient list',description:'Define audience segments for targeted sends',applicability:'available',mode:'automation',risk:'medium',rec:'pilot',rationale:'ESP platforms offer AI segmentation; test with low-stakes segments before full deployment',usingAI:false,notes:''},
+  {phase:'Distribution',activity:'Personalize content',description:'Customize content blocks or subject lines per recipient segment',applicability:'available',mode:'automation',risk:'medium',rec:'pilot',rationale:'Dynamic content and AI personalization widely available; brand voice consistency is the key risk',usingAI:false,notes:''},
+  {phase:'Distribution',activity:'Schedule send',description:'Set optimal send time and trigger delivery',applicability:'commoditized',mode:'automation',risk:'low',rec:'adopt',rationale:'Send-time optimization is standard in most ESPs; no reason not to use it',usingAI:false,notes:''},
+  {phase:'Analytics',activity:'Monitor performance',description:'Track open rates, click rates, unsubscribes in real time',applicability:'commoditized',mode:'automation',risk:'low',rec:'adopt',rationale:'Fully automated in all major ESPs; AI anomaly detection is an emerging add-on',usingAI:false,notes:''},
+  {phase:'Analytics',activity:'Summarize results',description:'Produce a written summary of issue performance',applicability:'available',mode:'augmentation',risk:'low',rec:'adopt',rationale:'AI can generate first-draft performance summaries from structured data',usingAI:false,notes:''},
+  {phase:'Analytics',activity:'Recommend next steps',description:'Identify what to change based on performance data',applicability:'emerging',mode:'augmentation',risk:'medium',rec:'pilot',rationale:'AI recommendations are improving but strategic interpretation benefits from human context',usingAI:false,notes:''}
+];
+
+function uid(){return Math.random().toString(36).slice(2,9)}
+
+const DEFAULT_DATA={
+  activeWorkflow:'newsletter',
+  snapshots:[],
+  workflows:{
+    newsletter:{
+      id:'newsletter',
+      name:'Newsletter',
+      phases:[...DEFAULT_PHASES],
+      activities:NEWSLETTER_ACTIVITIES.map(a=>({...a,id:uid()}))
+    }
+  }
+};
+
+let data;
+let addingPhase=false;
+let snapshotsOpen=false;
+
+function loadData(){
+  try{
+    const s=localStorage.getItem(STORAGE_KEY);
+    if(s){
+      data=JSON.parse(s);
+      if(!data.snapshots) data.snapshots=[];
+      Object.values(data.workflows||{}).forEach(w=>{if(!w.phases) w.phases=[...DEFAULT_PHASES];});
+    } else {
+      data=JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+  } catch(e){data=JSON.parse(JSON.stringify(DEFAULT_DATA));}
+}
+
+function saveData(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  const el=document.getElementById('save-status');
+  if(el) el.textContent='Auto-saved '+new Date().toLocaleTimeString();
+}
+
+function active(){return data.workflows[data.activeWorkflow]}
+
+/* ── Workflows ── */
+function switchWorkflow(id){data.activeWorkflow=id;saveData();render()}
+
+function openNewWorkflow(){
+  const panel=document.getElementById('new-workflow-panel');
+  panel.style.display='block';
+  document.getElementById('nw-name').focus();
+  const sel=document.getElementById('nw-template');
+  sel.innerHTML='<option value="blank">Blank (default phases, no activities)</option>';
+  Object.values(data.workflows).forEach(w=>{
+    const o=document.createElement('option');
+    o.value=w.id; o.textContent='Copy from: '+w.name; sel.appendChild(o);
+  });
+}
+function closeNewWorkflow(){
+  document.getElementById('new-workflow-panel').style.display='none';
+  document.getElementById('nw-name').value='';
+}
+function createWorkflow(){
+  const name=document.getElementById('nw-name').value.trim();
+  if(!name){document.getElementById('nw-name').focus();return;}
+  const templateId=document.getElementById('nw-template').value;
+  const id=uid();
+  let phases=[...DEFAULT_PHASES], activities=[];
+  if(templateId!=='blank'&&data.workflows[templateId]){
+    const src=data.workflows[templateId];
+    phases=[...src.phases];
+    activities=JSON.parse(JSON.stringify(src.activities)).map(a=>({...a,id:uid(),usingAI:false,notes:''}));
+  }
+  data.workflows[id]={id,name,phases,activities};
+  data.activeWorkflow=id;
+  saveData(); closeNewWorkflow(); render();
+}
+function deleteWorkflow(){
+  if(Object.keys(data.workflows).length<=1){alert('Create another workflow before deleting this one.');return;}
+  if(!confirm('Delete "'+active().name+'"? This cannot be undone.'))return;
+  delete data.workflows[data.activeWorkflow];
+  data.activeWorkflow=Object.keys(data.workflows)[0];
+  saveData(); render();
+}
+
+/* ── Phases ── */
+function showAddPhase(){addingPhase=true;renderTable();setTimeout(()=>{const i=document.getElementById('new-phase-input');if(i)i.focus();},40)}
+function cancelAddPhase(){addingPhase=false;renderTable()}
+function confirmAddPhase(){
+  const inp=document.getElementById('new-phase-input');
+  const name=(inp?inp.value:'').trim();
+  if(!name)return;
+  const w=active();
+  if(w.phases.includes(name)){alert('A phase named "'+name+'" already exists.');return;}
+  w.phases.push(name);
+  addingPhase=false;
+  saveData(); renderTable(); renderCards();
+}
+function deletePhase(phaseName){
+  const w=active();
+  const count=w.activities.filter(a=>a.phase===phaseName).length;
+  if(count>0){
+    if(!confirm('The phase "'+phaseName+'" contains '+count+' activit'+(count===1?'y':'ies')+'.\n\nOK to delete the phase and all its activities.\nCancel to keep it.'))return;
+    w.activities=w.activities.filter(a=>a.phase!==phaseName);
+  }
+  w.phases=w.phases.filter(p=>p!==phaseName);
+  saveData(); renderTable(); renderCards();
+}
+function renamePhase(el){
+  const oldName=el.dataset.phase;
+  const newName=el.value.trim();
+  if(!newName||newName===oldName){el.value=oldName;return;}
+  const w=active();
+  if(w.phases.includes(newName)){alert('A phase named "'+newName+'" already exists.');el.value=oldName;return;}
+  w.phases=w.phases.map(p=>p===oldName?newName:p);
+  w.activities.forEach(a=>{if(a.phase===oldName)a.phase=newName;});
+  el.dataset.phase=newName;
+  saveData(); renderTable();
+}
+
+/* ── Activities ── */
+function addActivity(phase){
+  const w=active();
+  const p=phase||(w.phases.length?w.phases[w.phases.length-1]:'General');
+  w.activities.push({id:uid(),phase:p,activity:'New activity',description:'Describe this activity',applicability:'emerging',mode:'augmentation',risk:'medium',rec:'pilot',rationale:'Add your rationale here',usingAI:false,notes:''});
+  saveData(); renderTable(); renderCards();
+}
+function deleteActivity(id){
+  active().activities=active().activities.filter(a=>a.id!==id);
+  saveData(); renderTable(); renderCards();
+}
+function updateField(id,field,value){
+  const a=active().activities.find(a=>a.id===id);
+  if(!a)return;
+  a[field]=value;
+  saveData();
+  if(['usingAI','rec','risk'].includes(field))renderCards();
+}
+
+/* ── Snapshots ── */
+function saveSnapshot(){
+  const def=active().name+' \u2014 '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const name=prompt('Name this snapshot:',def);
+  if(!name)return;
+  data.snapshots.unshift({id:uid(),name:name.trim(),savedAt:new Date().toISOString(),workflows:JSON.parse(JSON.stringify(data.workflows)),activeWorkflow:data.activeWorkflow});
+  if(data.snapshots.length>25)data.snapshots.length=25;
+  saveData(); renderSnapshots();
+  document.getElementById('save-status').textContent='Snapshot saved: "'+name.trim()+'"';
+}
+function loadSnapshot(id){
+  const snap=data.snapshots.find(s=>s.id===id);
+  if(!snap)return;
+  if(!confirm('Load snapshot "'+snap.name+'"?\n\nYour current state will be auto-saved as a snapshot first.'))return;
+  data.snapshots.unshift({id:uid(),name:'Auto-save before loading "'+snap.name+'"',savedAt:new Date().toISOString(),workflows:JSON.parse(JSON.stringify(data.workflows)),activeWorkflow:data.activeWorkflow});
+  data.workflows=JSON.parse(JSON.stringify(snap.workflows));
+  data.activeWorkflow=snap.activeWorkflow||Object.keys(snap.workflows)[0];
+  Object.values(data.workflows).forEach(w=>{if(!w.phases)w.phases=[...DEFAULT_PHASES];});
+  saveData(); render();
+}
+function deleteSnapshot(id){
+  if(!confirm('Delete this snapshot? This cannot be undone.'))return;
+  data.snapshots=data.snapshots.filter(s=>s.id!==id);
+  saveData(); renderSnapshots();
+}
+function toggleSnapshots(){
+  snapshotsOpen=!snapshotsOpen;
+  document.getElementById('snapshots-panel').style.display=snapshotsOpen?'block':'none';
+  document.getElementById('snap-btn').style.fontWeight=snapshotsOpen?'600':'400';
+  if(snapshotsOpen)renderSnapshots();
+}
+function renderSnapshots(){
+  document.getElementById('snap-count').textContent=data.snapshots.length;
+  const el=document.getElementById('snapshots-list');
+  if(!data.snapshots.length){el.innerHTML='<p class="snap-empty">No snapshots yet. Click "Save snapshot" to archive the current state.</p>';return;}
+  el.innerHTML=data.snapshots.map(s=>{
+    const d=new Date(s.savedAt);
+    const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    const wf=Object.values(s.workflows).map(w=>w.name).join(', ');
+    return`<div class="snap-item">
+      <div style="flex:1;min-width:0">
+        <div class="snap-name">${esc(s.name)}</div>
+        <div class="snap-meta">${ds} &mdash; ${esc(wf)}</div>
+      </div>
+      <button class="btn btn-sm" onclick="loadSnapshot('${s.id}')">Load</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteSnapshot('${s.id}')">Delete</button>
+    </div>`;
+  }).join('');
+}
+
+/* ── Export / Import ── */
+function exportJSON(){
+  const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u; a.download='editorial-ai-tool.json'; a.click(); URL.revokeObjectURL(u);
+}
+function importJSON(e){
+  const file=e.target.files[0]; if(!file)return;
+  const r=new FileReader();
+  r.onload=function(ev){
+    try{
+      const im=JSON.parse(ev.target.result);
+      if(!im.workflows)throw new Error('Missing workflows data');
+      if(!confirm('Import will replace all current workflows and snapshots. Continue?'))return;
+      data=im;
+      if(!data.snapshots)data.snapshots=[];
+      Object.values(data.workflows).forEach(w=>{if(!w.phases)w.phases=[...DEFAULT_PHASES];});
+      saveData(); render();
+    }catch(err){alert('Import failed: '+err.message);}
+  };
+  r.readAsText(file); e.target.value='';
+}
+
+/* ── Render ── */
+function renderTabs(){
+  let html='';
+  Object.values(data.workflows).forEach(w=>{
+    html+=`<button class="tab${w.id===data.activeWorkflow?' active':''}" onclick="switchWorkflow('${w.id}')">${esc(w.name)}</button>`;
+  });
+  html+=`<button class="tab-add" onclick="openNewWorkflow()" title="New workflow">+</button>`;
+  document.getElementById('workflow-tabs').innerHTML=html;
+}
+
+function renderCards(){
+  const w=active(), acts=w.activities;
+  const total=acts.length, using=acts.filter(a=>a.usingAI).length;
+  const adoptNow=acts.filter(a=>a.rec==='adopt').length;
+  const adoptGaps=acts.filter(a=>a.rec==='adopt'&&!a.usingAI).length;
+  const highRisk=acts.filter(a=>a.risk==='high').length;
+  const pct=total?Math.round(using/total*100):0;
+  document.getElementById('cards').innerHTML=`
+    <div class="card"><div class="card-label">Total activities</div><div class="card-val">${total}</div><div class="card-sub">${w.phases.length} phase${w.phases.length===1?'':'s'}</div></div>
+    <div class="card"><div class="card-label">Using AI now</div><div class="card-val${using>0?' cv-green':''}">${using}</div><div class="card-sub">${pct}% of activities</div></div>
+    <div class="card"><div class="card-label">Adopt-now gaps</div><div class="card-val${adoptGaps>0?' cv-amber':' cv-green'}">${adoptGaps}</div><div class="card-sub">of ${adoptNow} \u201cadopt now\u201d not yet in use</div></div>
+    <div class="card"><div class="card-label">High-risk activities</div><div class="card-val${highRisk>0?' cv-red':''}">${highRisk}</div><div class="card-sub">require human review policy</div></div>`;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-label').textContent=`AI adoption: ${using} of ${total} activities (${pct}%)`;
+  document.getElementById('table-title').textContent=w.name+' \u2014 activities';
+}
+
+function renderTable(){
+  const w=active(), wrap=document.getElementById('tbl-wrap');
+  if(!w.phases.length&&!w.activities.length){
+    wrap.innerHTML=`<div class="empty-state"><h3>No phases yet</h3><p>Click \u201c+ Add phase\u201d to create your first phase, then add activities to it.</p></div>`;
+    return;
+  }
+  let html=`<table><thead><tr>
+    <th style="width:90px">Phase</th>
+    <th style="width:155px">Activity</th>
+    <th style="width:145px">Description</th>
+    <th style="width:115px">AI applicability</th>
+    <th style="width:100px">Mode</th>
+    <th style="width:68px">Risk</th>
+    <th style="width:105px">Recommendation</th>
+    <th style="width:150px">Rationale</th>
+    <th style="width:70px;text-align:center">Using AI?</th>
+    <th style="width:130px">Notes / tool</th>
+    <th style="width:34px"></th>
+  </tr></thead><tbody>`;
+
+  w.phases.forEach(phase=>{
+    const phaseActs=w.activities.filter(a=>a.phase===phase);
+    html+=`<tr class="phase-header"><td colspan="11">
+      <div class="phase-header-inner">
+        <input class="phase-name-input" value="${esc(phase)}" data-phase="${esc(phase)}"
+          title="Click to rename"
+          onblur="renamePhase(this)"
+          onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape'){this.value=this.dataset.phase;this.blur()}" />
+        <button class="phase-pill" onclick="addActivity('${esc(phase)}')" title="Add activity here">+ activity</button>
+        <button class="phase-pill del" onclick="deletePhase('${esc(phase)}')" title="Delete phase">&times; delete phase</button>
+        <span style="font-size:11px;color:#ccc;margin-left:2px">${phaseActs.length} activit${phaseActs.length===1?'y':'ies'}</span>
+      </div>
+    </td></tr>`;
+
+    phaseActs.forEach(a=>{
+      const ac=APP_COLORS[a.applicability]||APP_COLORS.none;
+      html+=`<tr class="activity-row">
+        <td><select class="edit-input" style="font-size:12px" onchange="updateField('${a.id}','phase',this.value);renderTable()">
+          ${w.phases.map(p=>`<option value="${esc(p)}"${a.phase===p?' selected':''}>${esc(p)}</option>`).join('')}
+        </select></td>
+        <td><input class="edit-input name-input" value="${esc(a.activity)}" onchange="updateField('${a.id}','activity',this.value)" /></td>
+        <td><textarea class="edit-input desc-input" onchange="updateField('${a.id}','description',this.value)">${esc(a.description)}</textarea></td>
+        <td>
+          <select class="edit-input" onchange="updateField('${a.id}','applicability',this.value);renderTable()">
+            <option value="commoditized"${a.applicability==='commoditized'?' selected':''}>Commoditized</option>
+            <option value="available"${a.applicability==='available'?' selected':''}>Available</option>
+            <option value="emerging"${a.applicability==='emerging'?' selected':''}>Emerging</option>
+            <option value="none"${a.applicability==='none'?' selected':''}>None yet</option>
+          </select>
+          <div style="margin-top:3px"><span class="badge" style="background:${ac.bg};color:${ac.text};font-size:10px">
+            <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:${ac.dot};margin-right:3px;vertical-align:middle"></span>${a.applicability==='none'?'None yet':a.applicability.charAt(0).toUpperCase()+a.applicability.slice(1)}</span></div>
+        </td>
+        <td>
+          <select class="edit-input" onchange="updateField('${a.id}','mode',this.value);renderTable()">
+            <option value="augmentation"${a.mode==='augmentation'?' selected':''}>Augmentation</option>
+            <option value="automation"${a.mode==='automation'?' selected':''}>Automation</option>
+            <option value="either"${a.mode==='either'?' selected':''}>Either</option>
+            <option value="human"${a.mode==='human'?' selected':''}>Human only</option>
+          </select>
+          <div style="margin-top:3px"><span class="badge ${MODE_CLASS[a.mode]||'b-gray'}" style="font-size:10px">${MODE_LABEL[a.mode]||a.mode}</span></div>
+        </td>
+        <td>
+          <select class="edit-input" onchange="updateField('${a.id}','risk',this.value);renderTable()">
+            <option value="low"${a.risk==='low'?' selected':''}>Low</option>
+            <option value="medium"${a.risk==='medium'?' selected':''}>Medium</option>
+            <option value="high"${a.risk==='high'?' selected':''}>High</option>
+          </select>
+          <div style="margin-top:3px"><span class="badge ${RISK_CLASS[a.risk]||'b-gray'}" style="font-size:10px">${a.risk.charAt(0).toUpperCase()+a.risk.slice(1)}</span></div>
+        </td>
+        <td>
+          <select class="edit-input" onchange="updateField('${a.id}','rec',this.value);renderTable()">
+            <option value="adopt"${a.rec==='adopt'?' selected':''}>Adopt now</option>
+            <option value="pilot"${a.rec==='pilot'?' selected':''}>Pilot carefully</option>
+            <option value="monitor"${a.rec==='monitor'?' selected':''}>Monitor</option>
+            <option value="human"${a.rec==='human'?' selected':''}>Keep human</option>
+          </select>
+          <div style="margin-top:3px"><span class="badge ${REC_CLASS[a.rec]||'b-gray'}" style="font-size:10px">${REC_LABEL[a.rec]||a.rec}</span></div>
+        </td>
+        <td><textarea class="edit-input rationale-input" onchange="updateField('${a.id}','rationale',this.value)">${esc(a.rationale)}</textarea></td>
+        <td style="text-align:center;vertical-align:middle">
+          <input type="checkbox"${a.usingAI?' checked':''} onchange="updateField('${a.id}','usingAI',this.checked)" style="width:16px;height:16px;accent-color:#639922;cursor:pointer" />
+        </td>
+        <td><textarea class="edit-input notes-input" placeholder="Tool, notes\u2026" onchange="updateField('${a.id}','notes',this.value)">${esc(a.notes)}</textarea></td>
+        <td><button class="delete-row" onclick="deleteActivity('${a.id}')" title="Delete activity">&times;</button></td>
+      </tr>`;
+    });
+  });
+
+  // Orphaned activities (phase was deleted but activities remain)
+  const orphans=w.activities.filter(a=>!w.phases.includes(a.phase));
+  if(orphans.length){
+    html+=`<tr class="phase-header"><td colspan="11">
+      <div class="phase-header-inner">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#e24b4a">Unassigned</span>
+        <span style="font-size:11px;color:#ccc;margin-left:4px">${orphans.length} activit${orphans.length===1?'y':'ies'} \u2014 move to a phase or delete</span>
+      </div>
+    </td></tr>`;
+    orphans.forEach(a=>{
+      html+=`<tr class="activity-row"><td>
+        <select class="edit-input" style="font-size:12px;border-color:#f0c0c0;background:#fff9f9" onchange="updateField('${a.id}','phase',this.value);renderTable()">
+          <option value="${esc(a.phase)}" disabled selected>&#x26A0; ${esc(a.phase)}</option>
+          ${w.phases.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}
+        </select>
+      </td>
+      <td colspan="9" style="color:#888;font-size:12px;font-style:italic">${esc(a.activity)} &mdash; reassign phase using the dropdown, or delete</td>
+      <td><button class="delete-row" onclick="deleteActivity('${a.id}')" title="Delete">&times;</button></td></tr>`;
+    });
+  }
+
+  // Add phase row
+  html+=`<tr class="add-phase-row"><td colspan="11">`;
+  if(addingPhase){
+    html+=`<div class="add-phase-form">
+      <input type="text" id="new-phase-input" placeholder="Phase name (e.g. Pre-Production, Review\u2026)"
+        onkeydown="if(event.key==='Enter'){confirmAddPhase()}else if(event.key==='Escape'){cancelAddPhase()}" />
+      <button class="btn btn-primary btn-sm" onclick="confirmAddPhase()">Add phase</button>
+      <button class="btn btn-sm" onclick="cancelAddPhase()">Cancel</button>
+    </div>`;
+  } else {
+    html+=`<button class="add-row-btn" onclick="showAddPhase()"><span style="font-size:15px;line-height:1">+</span>&nbsp;Add phase</button>`;
+  }
+  html+=`</td></tr></tbody></table>`;
+  wrap.innerHTML=html;
+}
+
+function render(){
+  renderTabs();
+  renderCards();
+  renderTable();
+  renderSnapshots();
+  document.getElementById('snap-count').textContent=data.snapshots.length;
+  document.getElementById('save-status').textContent='Auto-saved '+new Date().toLocaleTimeString();
+}
+
+function esc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadData();
+render();
+</script>
+</body>
+</html>
