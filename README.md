@@ -1,3 +1,11 @@
+> **There's a newer version.** This repo is the original prototype — a
+> lightweight workflow tagger for AI applicability in editorial work.
+> A successor project, [`editorial-ai-ontology`](https://github.com/thebradking/editorial-ai-ontology),
+> operationalizes the same idea against the MIT Sloan deep ontology of work
+> activities (Cai et al., 2026), adding inheritance, scenario planning,
+> multi-typed risk, and per-activity evidence. Both repos are maintained;
+> they answer different questions.
+
 This is a local demo only. You can upload JSON files to share them, but this is a locally stored demo.
 
 Researchers from MIT's Sloan School of Management recently published a 120-page paper outlining a framework for evaluating workflows—and the tasks that make them up—to help teams determine where (or if) AI might be deployed and how that might (or might not) help the team. It's a deep dive into the nuance of work, one that project managers who have done Work Breakdown Structures have lived with for a while.
