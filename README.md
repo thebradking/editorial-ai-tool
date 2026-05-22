@@ -1,11 +1,3 @@
-> **There's a newer version.** This repo is the original prototype — a
-> lightweight workflow tagger for AI applicability in editorial work.
-> A successor project, [`editorial-ai-ontology`](https://github.com/thebradking/editorial-ai-ontology),
-> operationalizes the same idea against the MIT Sloan deep ontology of work
-> activities (Cai et al., 2026), adding inheritance, scenario planning,
-> multi-typed risk, and per-activity evidence. Both repos are maintained;
-> they answer different questions.
-
 # Editorial AI Tool
 
 A lightweight, browser-based tool for tagging the AI applicability of every task in an editorial workflow. Built as a single self-contained HTML file — no install, no build step, no backend.
